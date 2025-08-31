@@ -1,6 +1,6 @@
 import boto3
 
-from .config import settings
+from ..core.config import settings
 
 R2_ACCOUNT_ID = settings.r2_account_id
 R2_ACCESS_KEY_ID = settings.r2_access_key_id

@@ -2,8 +2,8 @@ import os
 import tempfile
 import uuid
 
+from ..services.r2_client import r2_client
 from .config import settings
-from .r2_client import r2_client
 
 
 def save_to_tmp(file: bytes, file_name: str | None) -> str:
@@ -33,3 +33,7 @@ def save_to_r2(file_path: str) -> None:
                               os.path.basename(file_path))
     except Exception as e:
         print(f"Error uploading file to S3: {e}")
+
+
+def process_file(file_path: str, job_id: str) -> None:
+    pass

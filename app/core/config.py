@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     # OpenAI API
     openai_api_key: str
 
+    # Mongo DB
+    mongo_user: str
+    mongo_pass: str
+    mongo_host: str
+    mongo_port: int
+    db_name: str
+
     class Config:
         env_file = ".env"
 
