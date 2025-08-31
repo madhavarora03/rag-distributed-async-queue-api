@@ -1,12 +1,15 @@
+import asyncio
 import os
 import tempfile
 import uuid
+from typing import Tuple
 
+from ..services.db_service import JobStatus, update_job
 from ..services.r2_client import r2_client
 from .config import settings
 
 
-def save_to_tmp(file: bytes, file_name: str | None) -> str:
+def save_to_tmp(file: bytes, file_name: str | None) -> Tuple[str, str]:
     """
     Save bytes securely in the system's temp dir with a unique name.
     Returns the absolute file path.
@@ -20,7 +23,7 @@ def save_to_tmp(file: bytes, file_name: str | None) -> str:
     with open(file_path, "wb") as f:
         f.write(file)
 
-    return file_path
+    return file_path, unique_name
 
 
 def save_to_r2(file_path: str) -> None:
@@ -35,5 +38,21 @@ def save_to_r2(file_path: str) -> None:
         print(f"Error uploading file to S3: {e}")
 
 
-def process_file(file_path: str, job_id: str) -> None:
-    pass
+async def process_file(file_path: str, job_id: str):
+    try:
+        steps = [
+            ("Saving to R2", lambda: save_to_r2(file_path)),
+            ("Parsing PDF", lambda: asyncio.sleep(2)),
+            ("Generating embeddings", lambda: asyncio.sleep(2)),
+            ("Storing in vector DB", lambda: asyncio.sleep(1)),
+        ]
+
+        for step, action in steps:
+            update_job(job_id, status=JobStatus.PROCESSING, step=step)
+            await asyncio.to_thread(action)
+            await asyncio.sleep(0.1)
+
+        update_job(job_id, status=JobStatus.DONE, step="Complete")
+
+    except Exception as e:
+        update_job(job_id, status=JobStatus.FAILED, step="Error", error=str(e))
