@@ -2,6 +2,9 @@ import os
 import tempfile
 import uuid
 
+from .config import settings
+from .r2_client import r2_client
+
 
 def save_to_tmp(file: bytes, file_name: str | None) -> str:
     """
@@ -18,3 +21,15 @@ def save_to_tmp(file: bytes, file_name: str | None) -> str:
         f.write(file)
 
     return file_path
+
+
+def save_to_r2(file_path: str) -> None:
+    R2_BUCKET_NAME = settings.r2_bucket_name
+    if R2_BUCKET_NAME is None:
+        raise ValueError("R2_BUCKET_NAME is not set")
+
+    try:
+        r2_client.upload_file(file_path, R2_BUCKET_NAME,
+                              os.path.basename(file_path))
+    except Exception as e:
+        print(f"Error uploading file to S3: {e}")
