@@ -103,3 +103,9 @@ async def process_file(file_path: str, job_id: str):
 
     except Exception as e:
         update_job(job_id, status=JobStatus.FAILED, step="Error", error=str(e))
+
+
+def start_process_file(file_path: str, job_id: str):
+    """Wrapper to run async process_file in background."""
+    import asyncio
+    asyncio.run(process_file(file_path, job_id))
