@@ -24,6 +24,8 @@ db = client[settings.db_name]
 
 jobs = db["jobs"]
 users = db["users"]
+conversations = db["conversations"]
+
 
 # Ensure useful indexes
 jobs.create_index([("job_id", ASCENDING)], unique=True)
@@ -69,3 +71,27 @@ def get_job(job_id: str) -> Optional[Dict[str, Any]]:
 def get_user_id(username: str) -> Optional[str]:
     user = users.find_one({"username": username}, {"_id": 1})
     return user["_id"] if user else None
+
+
+def save_conversation(username: str, query: str, response: str) -> None:
+    """Save query/response pair under a user's conversation history."""
+    conversations.update_one(
+        {"username": username},
+        {
+            "$push": {
+                "messages": {
+                    "query": query,
+                    "response": response,
+                    "timestamp": datetime.now()
+                }
+            }
+        },
+        upsert=True,  # create doc if it doesn’t exist
+    )
+
+
+def get_conversations(username: str) -> Optional[Dict[str, Any]]:
+    """Retrieve all conversations for a user."""
+    return conversations.find_one(
+        {"username": username}, {"_id": 0, "messages": 1}
+    )
