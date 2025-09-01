@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     mongo_port: int
     db_name: str
 
+    # vector_db config
+    qdrant_uri: str
+
     class Config:
         env_file = ".env"
 
