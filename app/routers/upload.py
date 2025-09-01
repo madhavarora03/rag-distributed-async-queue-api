@@ -2,7 +2,7 @@ import asyncio
 import uuid
 
 from fastapi import (APIRouter, BackgroundTasks, Depends, File, HTTPException,
-                     Response, UploadFile)
+                     Response, UploadFile, status)
 
 from ..core.utils import save_to_tmp, start_process_file
 from ..services.db_service import create_job, get_job, get_user_id
@@ -11,7 +11,7 @@ from .auth import get_current_user
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
 
-@router.post("", status_code=202)
+@router.post("", status_code=status.HTTP_202_ACCEPTED)
 async def upload_file(
     background_tasks: BackgroundTasks,
     response: Response,
@@ -19,12 +19,18 @@ async def upload_file(
     current_user: str = Depends(get_current_user)
 ):
     if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Invalid file type")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type"
+        )
 
     user_id = get_user_id(current_user)
 
     if user_id is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
 
     job_id = str(uuid.uuid4())
 
@@ -49,5 +55,8 @@ async def get_job_status(
 ):
     job = await asyncio.to_thread(get_job, job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found"
+        )
     return job

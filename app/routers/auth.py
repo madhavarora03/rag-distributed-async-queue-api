@@ -20,7 +20,7 @@ class SignupRequest(BaseModel):
     password: str
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def signup(payload: SignupRequest):
     """Register a new user."""
     # Check if user exists
@@ -51,7 +51,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             user["hashed_password"]
     ):
         raise HTTPException(
-            status_code=400, detail="Incorrect username or password")
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect username or password"
+        )
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
