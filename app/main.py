@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
-from .routers import auth, upload
+from .routers import auth, chat, upload
 
 app = FastAPI()
 
 app.include_router(auth.router)
 app.include_router(upload.router)
+app.include_router(chat.router)
 
 
 @app.get("/api/health", tags=["health"])

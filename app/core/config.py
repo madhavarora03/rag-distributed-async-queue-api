@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # auth related stuff
     secret_key: str
 
+    # redis/valkey related stuff
+    redis_host: str
+    redis_port: int
+
     class Config:
         env_file = ".env"
 
