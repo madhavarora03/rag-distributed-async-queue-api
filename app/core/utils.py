@@ -32,13 +32,13 @@ def save_to_tmp(file: bytes, file_name: str | None) -> Tuple[str, str]:
     return file_path, unique_name
 
 
-def save_to_r2(file_path: str) -> str:
+def save_to_r2(file_path: str, owner_id: str) -> str:
     """Upload file to R2 and return object key. Raises on failure."""
     R2_BUCKET_NAME = settings.r2_bucket_name
     if not R2_BUCKET_NAME:
         raise ValueError("R2_BUCKET_NAME is not set")
 
-    key = os.path.basename(file_path)
+    key = f"{owner_id}/{os.path.basename(file_path)}"
 
     try:
         r2_client.upload_file(file_path, R2_BUCKET_NAME, key)
@@ -75,12 +75,12 @@ async def generate_embeddings_and_store(split_docs, job_id: str):
     return vector_store
 
 
-async def process_file(file_path: str, job_id: str):
+async def process_file(file_path: str, job_id: str, owner_id: str):
     """Background job: Save to R2 → Parse PDF → Embeddings → Store in Qdrant"""
     try:
         # Step 1. Save to R2
         update_job(job_id, status=JobStatus.PROCESSING, step="Saving to R2")
-        await asyncio.to_thread(save_to_r2, file_path)
+        await asyncio.to_thread(save_to_r2, file_path, owner_id)
 
         # Step 2. Parse PDF
         update_job(job_id, status=JobStatus.PROCESSING, step="Parsing PDF")
@@ -105,7 +105,7 @@ async def process_file(file_path: str, job_id: str):
         update_job(job_id, status=JobStatus.FAILED, step="Error", error=str(e))
 
 
-def start_process_file(file_path: str, job_id: str):
+def start_process_file(file_path: str, job_id: str, owner_id: str):
     """Wrapper to run async process_file in background."""
     import asyncio
-    asyncio.run(process_file(file_path, job_id))
+    asyncio.run(process_file(file_path, job_id, owner_id))

@@ -21,15 +21,20 @@ client = MongoClient(
 )
 
 db = client[settings.db_name]
+
 jobs = db["jobs"]
+users = db["users"]
 
-# Ensure index on job_id
+# Ensure useful indexes
 jobs.create_index([("job_id", ASCENDING)], unique=True)
+jobs.create_index([("owner", ASCENDING)])
+jobs.create_index([("status", ASCENDING)])
 
 
-def create_job(job_id: str, filename: str) -> None:
+def create_job(job_id: str, filename: str, owner_id: str) -> None:
     """Insert a new job into MongoDB."""
     jobs.insert_one({
+        "owner": owner_id,  # username
         "job_id": job_id,
         "filename": filename,
         "status": JobStatus.PENDING.value,
@@ -59,3 +64,8 @@ def get_job(job_id: str) -> Optional[Dict[str, Any]]:
     """Fetch job by ID, excluding Mongo's _id field."""
     job = jobs.find_one({"job_id": job_id}, {"_id": 0})
     return job
+
+
+def get_user_id(username: str) -> Optional[str]:
+    user = users.find_one({"username": username}, {"_id": 1})
+    return user["_id"] if user else None

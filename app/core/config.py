@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # vector_db config
     qdrant_uri: str
 
+    # auth related stuff
+    secret_key: str
+
     class Config:
         env_file = ".env"
 
